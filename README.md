@@ -30,7 +30,7 @@ A simple URL shortener application written in Go. This application provides endp
 
 1. Run the application:
    ```
-   go run *.go
+   go run main.go
    ```
 
 The server will start on http://localhost:8080.

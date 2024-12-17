@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+const StorageFile = "url_mappings.json"
+
 var (
 	shortenedURLs = make(map[string]string)
 	urlMapMutex   sync.RWMutex
@@ -33,7 +35,7 @@ func isValidURL(u string) bool {
 	return err == nil
 }
 
-func shortenURLHandler(w http.ResponseWriter, r *http.Request) {
+func ShortenURLHandler(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		URL string `json:"url"`
 	}
@@ -52,13 +54,13 @@ func shortenURLHandler(w http.ResponseWriter, r *http.Request) {
 	shortenedURLs[shortURL] = req.URL
 	urlMapMutex.Unlock()
 
-	saveMappings()
+	SaveMappings(StorageFile)
 
 	resp := map[string]string{"short_url": "http://localhost:8080/" + shortURL}
 	json.NewEncoder(w).Encode(resp)
 }
 
-func redirectHandler(w http.ResponseWriter, r *http.Request) {
+func RedirectHandler(w http.ResponseWriter, r *http.Request) {
 	shortURL := r.URL.Path[1:]
 
 	urlMapMutex.RLock()
@@ -73,8 +75,8 @@ func redirectHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, originalURL, http.StatusFound)
 }
 
-func loadMappings() {
-	file, err := os.Open(storageFile)
+func LoadMappings(filePath string) {
+	file, err := os.Open(filePath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return
@@ -90,8 +92,8 @@ func loadMappings() {
 	}
 }
 
-func saveMappings() {
-	file, err := os.Create(storageFile)
+func SaveMappings(filePath string) {
+	file, err := os.Create(filePath)
 	if err != nil {
 		log.Fatalf("Failed to create storage file: %v", err)
 	}
@@ -99,7 +101,7 @@ func saveMappings() {
 
 	urlMapMutex.RLock()
 	defer urlMapMutex.RUnlock()
-	if err := json.NewEncoder(file).Encode(shortenedURLs); err != nil {
+	if err := json.NewEncoder(file).Encode(&shortenedURLs); err != nil {
 		log.Fatalf("Failed to encode storage file: %v", err)
 	}
 }

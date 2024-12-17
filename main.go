@@ -7,15 +7,15 @@ import (
 	"os"
 	"os/signal"
 	"time"
+
+	"urlshortener/urlshortener"
 )
 
-const storageFile = "url_mappings.json"
-
 func main() {
-	loadMappings()
+	urlshortener.LoadMappings(urlshortener.StorageFile)
 
-	http.HandleFunc("/shorten", shortenURLHandler)
-	http.HandleFunc("/", redirectHandler)
+	http.HandleFunc("/shorten", urlshortener.ShortenURLHandler)
+	http.HandleFunc("/", urlshortener.RedirectHandler)
 	srv := &http.Server{Addr: ":8080"}
 
 	go func() {
@@ -37,7 +37,7 @@ func main() {
 		log.Fatalf("Server forced to shutdown: %v", err)
 	}
 
-	saveMappings()
+	urlshortener.SaveMappings(urlshortener.StorageFile)
 
 	log.Println("Server exiting")
 }
