@@ -1,10 +1,11 @@
-package main
+package urlshortener
 
 import (
 	"encoding/json"
 	"log"
 	"math/rand"
 	"net/http"
+	"net/url"
 	"os"
 	"sync"
 	"time"
@@ -27,12 +28,22 @@ func generateShortURL() string {
 	return string(b)
 }
 
+func isValidURL(u string) bool {
+	_, err := url.ParseRequestURI(u)
+	return err == nil
+}
+
 func shortenURLHandler(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		URL string `json:"url"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request payload\n"+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if !isValidURL(req.URL) {
+		http.Error(w, "Invalid URL", http.StatusBadRequest)
 		return
 	}
 
